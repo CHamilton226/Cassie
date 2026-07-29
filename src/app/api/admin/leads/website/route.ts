@@ -15,11 +15,10 @@ export async function GET() {
     const leads = await db
       .select()
       .from(websiteLeads)
-      .orderBy(desc(websiteLeads.createdAt))
-      .all();
+      .orderBy(desc(websiteLeads.createdAt));
 
     // Attach practice name
-    const allPractices = await db.select().from(practices).all();
+    const allPractices = await db.select().from(practices);
     const enriched = leads.map(lead => {
       const practice = allPractices.find(p => p.id === lead.practiceId);
       return {

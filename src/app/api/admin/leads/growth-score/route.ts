@@ -15,8 +15,7 @@ export async function GET() {
     const leads = await db
       .select()
       .from(growthScoreLeads)
-      .orderBy(desc(growthScoreLeads.createdAt))
-      .all();
+      .orderBy(desc(growthScoreLeads.createdAt));
 
     return NextResponse.json({ leads });
   } catch (error) {

@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
     if (search) {
       // Search across name, email, and practice name
       const searchPattern = `%${search}%`;
-      const allUsers = await db.select().from(users).all();
-      const allPractices = await db.select().from(practices).all();
+      const allUsers = await db.select().from(users);
+      const allPractices = await db.select().from(practices);
 
       const matchedUsers = allUsers.filter(u => {
         const practice = allPractices.find(p => p.userId === u.id);
@@ -42,15 +42,14 @@ export async function GET(request: NextRequest) {
       const allUsers = await db
         .select()
         .from(users)
-        .orderBy(desc(users.createdAt))
-        .all();
+        .orderBy(desc(users.createdAt));
 
       totalCount = allUsers.length;
       userRows = allUsers.slice(offset, offset + limit);
     }
 
     // Attach practice info
-    const allPractices = await db.select().from(practices).all();
+    const allPractices = await db.select().from(practices);
     const enriched = userRows.map(user => {
       const practice = allPractices.find(p => p.userId === user.id);
       return {

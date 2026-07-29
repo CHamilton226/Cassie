@@ -26,7 +26,7 @@ export async function GET() {
     const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
     // Total users
-    const allUsers = await db.select().from(users).all();
+    const allUsers = await db.select().from(users);
     const totalUsers = allUsers.length;
     const freeUsers = allUsers.filter(u => u.subscriptionTier === 'free').length;
     const paidUsers = totalUsers - freeUsers;
