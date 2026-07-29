@@ -1,26 +1,29 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
+import type { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import * as schema from './schema';
 
-let dbInstance: ReturnType<typeof drizzle> | null = null;
+type DB = NeonHttpDatabase<typeof schema>;
 
-function getDb() {
+let dbInstance: DB | null = null;
+
+function getDb(): DB {
   if (!dbInstance) {
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
       throw new Error('DATABASE_URL is not configured');
     }
     const sql = neon(databaseUrl);
-    dbInstance = drizzle(sql, { schema });
+    dbInstance = drizzle(sql, { schema }) as DB;
   }
   return dbInstance;
 }
 
-// Lazy proxy — only connects on first actual query
-export const db = new Proxy({} as ReturnType<typeof drizzle>, {
-  get(_, prop) {
+// Lazy proxy that preserves full Drizzle type information
+export const db: DB = new Proxy({} as DB, {
+  get(_, prop: string | symbol) {
     return (getDb() as any)[prop];
   },
-});
+}) as DB;
 
 export { schema };
