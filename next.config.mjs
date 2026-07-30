@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['@neondatabase/serverless', 'ws'],
+    serverComponentsExternalPackages: ['@neondatabase/serverless'],
   },
   typescript: {
     // Proxy-based lazy DB init doesn't satisfy build-time type checking.
