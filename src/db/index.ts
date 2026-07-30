@@ -1,9 +1,15 @@
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import type { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import type { NeonDatabase } from 'drizzle-orm/neon-serverless';
+import ws from 'ws';
 import * as schema from './schema';
 
-type DB = NeonHttpDatabase<typeof schema>;
+// Configure the WebSocket constructor for the Neon serverless driver.
+// In Node.js (including Vercel serverless), the ws package provides this.
+// Without this, the Pool will fail with "WebSocket is not defined".
+neonConfig.webSocketConstructor = ws;
+
+type DB = NeonDatabase<typeof schema>;
 
 let dbInstance: DB | null = null;
 
@@ -13,8 +19,8 @@ function getDb(): DB {
     if (!databaseUrl) {
       throw new Error('DATABASE_URL is not configured');
     }
-    const sql = neon(databaseUrl);
-    dbInstance = drizzle(sql, { schema }) as DB;
+    const pool = new Pool({ connectionString: databaseUrl });
+    dbInstance = drizzle(pool, { schema });
   }
   return dbInstance;
 }
