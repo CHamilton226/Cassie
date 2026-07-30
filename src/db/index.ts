@@ -1,28 +1,20 @@
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import type { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import type { NeonDatabase } from 'drizzle-orm/neon-serverless';
+import ws from 'ws';
 import * as schema from './schema';
 
-/**
- * IMPORTANT: DATABASE_URL must use the NON-POOLED Neon endpoint.
- *
- * The neon() HTTP driver sends queries as HTTP POST to https://<host>/sql.
- * Neon's PgBouncer pooler (hostnames containing "-pooler") only speaks the
- * PostgreSQL wire protocol and does NOT serve HTTP SQL — runtime queries will
- * fail with connection errors.
- *
- * Correct format:
- *   postgresql://user:pass@ep-<name>.<region>.aws.neon.tech/db?sslmode=require
- *
- * NOT the pooled endpoint:
- *   postgresql://user:pass@ep-<name>-pooler.<region>.aws.neon.tech/db?sslmode=require
- *
- * The migration script (src/db/migrate.ts) uses pg.Pool which speaks wire
- * protocol and works with both endpoints, but the app runtime must use
- * the non-pooled URL.
- */
+// Configure the WebSocket constructor for the Neon serverless driver.
+// In Node.js (including Vercel serverless), the ws package provides this.
+// Without this, the Pool will fail with "WebSocket is not defined".
+neonConfig.webSocketConstructor = ws;
 
-type DB = NeonHttpDatabase<typeof schema>;
+// NOTE: This driver uses PostgreSQL wire protocol over WebSocket and
+// works with the pooled Neon endpoint (hostname containing "-pooler").
+// The HTTP SQL driver (`neon()` + drizzle-orm/neon-http) requires the
+// non-pooled endpoint and is NOT used here.
+
+type DB = NeonDatabase<typeof schema>;
 
 let dbInstance: DB | null = null;
 
@@ -32,8 +24,8 @@ function getDb(): DB {
     if (!databaseUrl) {
       throw new Error('DATABASE_URL is not configured');
     }
-    const sql = neon(databaseUrl);
-    dbInstance = drizzle(sql, { schema }) as DB;
+    const pool = new Pool({ connectionString: databaseUrl });
+    dbInstance = drizzle(pool, { schema });
   }
   return dbInstance;
 }
