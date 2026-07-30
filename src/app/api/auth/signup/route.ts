@@ -87,9 +87,16 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Signup error:', error);
+    const errorRef = `ERR-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    console.error(`Signup error [${errorRef}]:`, error);
+
+    const message =
+      process.env.NODE_ENV !== 'production'
+        ? error?.message ?? 'Unknown error'
+        : `An unexpected error occurred. Reference: ${errorRef}`;
+
     return NextResponse.json(
-      { error: 'An unexpected error occurred. Please try again.' },
+      { error: message },
       { status: 500 }
     );
   }
